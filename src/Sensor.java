@@ -6,11 +6,12 @@ import java.util.stream.Collectors;
 import com.google.gson.Gson;
 
 public class Sensor {
-	Double x;
-	Double y;
-	String id;
+	public Double x;
+	public Double y;
+	public String id;
 	
-	public Sensor[] getSensors(String filePath){
+	
+	public static Sensor[] getSensors(String filePath){
 		Gson gson = new Gson();
 		Sensor[] sensors;
 		try {
