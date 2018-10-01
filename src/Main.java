@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -44,8 +45,9 @@ public class Main {
 		List<Message> messageList = new ArrayList<Message>();// = new List<Message>();
 		SNSandSQS Queue = new SNSandSQS();
 		//ArrayList<DataEntry[]> entryLogger;;
-		while(messageList.size() <= 10) {
-			messageList.addAll(Queue.getMessages());
+		while(true) {
+			messageList = Queue.getMessages();
+			TimeUnit.SECONDS.sleep(1);
 			if(messageList.isEmpty()){
 				continue;
 			}
@@ -54,7 +56,12 @@ public class Main {
 			//Get DataEntries and have a nice list of all of them
 			for(Message message : messageList) {
 				System.out.println(SensorMessageBody.fromJson(message.getBody()).toString());
-				DataEntry.getDataEntry("[" + SensorMessageBody.fromJson(message.getBody()).toString()+"]");
+				DataPoint.getDataEntry(SensorMessageBody.fromJson(message.getBody()).toString());
+				// HERE NOW:
+				// WORKING WITH THE DATAPOINT, ADD THE EVENT IF INTO A HASHSET, THEN AVERAGE THE VALUES OVER 10 SEC, AND PUT BACK INTO HASHMAP OF SENSOR AND AVERAGE
+				
+				
+				
 				
 				//(DataEntry.getDataEntry("[" + SensorMessageBody.fromJson(message.getBody()).toString()+"]");)
 				

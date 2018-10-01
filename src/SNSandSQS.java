@@ -40,7 +40,6 @@ public class SNSandSQS {
 	}
 	
 	public List<Message> getMessages() throws InterruptedException{
-		//TimeUnit.SECONDS.sleep(1);
 		List<Message> messages = sqs.receiveMessage(new ReceiveMessageRequest(myQueueUrl).withMaxNumberOfMessages(10)).getMessages();
 		return messages;
 	}
