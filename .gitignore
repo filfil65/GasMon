@@ -1,0 +1,9 @@
+#Secret Key File
+AWSKey.csv
+
+#Not needed stuff
+
+
+#Compiled things
+
+.target
