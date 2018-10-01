@@ -6,4 +6,5 @@ AWSKey.csv
 
 #Compiled things
 
-.target
+target/
+aws/
