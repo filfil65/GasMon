@@ -12,7 +12,7 @@ public class EventLog extends HashSet<String> {
 		}
 	}
 	
-	// Resets the size of the Evet log to the last 100 values
+	// Resets the size of the Event log to the last 100 values
 	public void reset() {
 		String[] tempLog = toArray(new String[size()]);
 		clear();

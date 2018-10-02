@@ -29,9 +29,17 @@ public class Main {
 
 	public static void main(String[] args) throws InterruptedException {
 		logger.info("Initialise");
-		DecimalFormat df = new DecimalFormat("#.###");
+		DecimalFormat df = new DecimalFormat("#.##");
 		String bucket = "eventprocessing-rfm-sept-2018-locationss3bucket-186b0uzd6cf01";
 		String file = "locations.json";
+
+		// Create a common time array with empty MinuteRecords going back 6 minutes for
+		// late values
+		ArrayList<MinuteRecord> timeArray = new ArrayList<MinuteRecord>();
+		long startTime = System.currentTimeMillis();
+		for (int i = -5; i <= 0; i++) {
+			timeArray.add(new MinuteRecord(startTime + (i * 60000)));
+		}
 
 		// Get Amazon S3 Sensor Data
 		AmazonS3Getter.GetSensorData(bucket, file);
@@ -41,6 +49,7 @@ public class Main {
 		Sensor[] sensors = Sensor.getSensors(file);
 		HashMap<String, Sensor> sensorLog = new HashMap<String, Sensor>();
 		for (Sensor sensor : sensors) {
+			sensor.record = timeArray;
 			sensorLog.put(sensor.id, sensor);
 		}
 		logger.info("Sensor Location extracted from json");
@@ -55,16 +64,24 @@ public class Main {
 			if (eventLog.size() > 500) { // Reset the size of log to last 100 if it gets above 1000
 				eventLog.reset();
 			}
+			// Check time and print results
+			long now = System.currentTimeMillis();
+			if((now - startTime) > 60000) {
+				startTime = startTime + 60000;
+				System.out.println("\nAverage pollution values and value spread 5 minutes ago were:");
+				System.out.println(Double.valueOf(df.format((startTime))));
+				for (Sensor sensor : sensorLog.values()) {
+					System.out.println("Average: " + sensor.record.get(0).average + " Spread: " + sensor.record.get(0).spread);
+				}
+			}
 			if (messageList.isEmpty()) { // If there are no new messages then continue and hope for new entry
 				continue;
 			} else { // If there are new messages - process each one of them
 				for (Message message : messageList) {
-					DataPoint newData = DataPoint
-							.getDataEntry(SensorMessageBody.fromJson(message.getBody()).toString());
+					DataPoint newData = DataPoint.getDataEntry(SensorMessageBody.fromJson(message.getBody()).toString());
 					if (eventLog.addEvent(newData)) { // If new event was added and valid
-						if (sensorLog.containsKey(newData.locationId)) { // If we have a sensor at the location,
-																			// calculate new average
-							sensorLog.get(newData.locationId).addDataPoint(newData.value);
+						if (sensorLog.containsKey(newData.locationId)) { // If we have a sensor at that location,
+							sensorLog.get(newData.locationId).addToRecord(newData); // Add new dataPoint to record
 						} else {
 							logger.info("Location " + newData.locationId + " is unknown.");
 						}
@@ -74,11 +91,10 @@ public class Main {
 				System.out.println(i);
 			}
 		}
+		
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END OF MAIN LOOP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 		Queue.queueKill();
-		for (Sensor sensor : sensorLog.values()) {
-			System.out.println(Double.valueOf(df.format((sensor.average))));
-		}
-
-	}
-
-}
+		
+	} // End of method
+} // End of class
