@@ -9,8 +9,10 @@ public class Sensor {
 	public Double x;
 	public Double y;
 	public String id;
-	
-	
+	public int DataPointNo = 0;
+	public Double average;
+	public Double diff;
+		
 	public static Sensor[] getSensors(String filePath){
 		Gson gson = new Gson();
 		Sensor[] sensors;
@@ -28,4 +30,20 @@ public class Sensor {
 		}
 		return null; // Return Null if file reading failed
 	}
+	
+	public void addDataPoint(Double newValue) {
+		if(DataPointNo == 0) {
+			average = newValue;
+			DataPointNo = 1;
+		} else {
+			DataPointNo++;
+			diff = average - (average * (DataPointNo - 1) + newValue)/DataPointNo;
+			average = (average * (DataPointNo - 1) + newValue)/DataPointNo;
+			//new_average = (old_average * (n-1) + new_value) / n
+		}
+	}
+	
+//	public static void average(Double newValue) {
+//		
+//	}
 }

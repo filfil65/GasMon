@@ -1,4 +1,6 @@
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -27,65 +29,56 @@ public class Main {
 
 	public static void main(String[] args) throws InterruptedException {
 		logger.info("Initialise");
-
+		DecimalFormat df = new DecimalFormat("#.###");
 		String bucket = "eventprocessing-rfm-sept-2018-locationss3bucket-186b0uzd6cf01";
 		String file = "locations.json";
 
 		// Get Amazon S3 Sensor Data
 		AmazonS3Getter.GetSensorData(bucket, file);
-		logger.info("Sensor Data fetched successfully from Amazon S3"); 
+		logger.info("Sensor Data fetched successfully from Amazon S3");
 
-		// Get Sensor Locations
+		// Get Sensor Locations & save sensors to a HashMap<locationKey, Sensor>
 		Sensor[] sensors = Sensor.getSensors(file);
-		logger.info("Sensor Location extracted from json"); 
+		HashMap<String, Sensor> sensorLog = new HashMap<String, Sensor>();
+		for (Sensor sensor : sensors) {
+			sensorLog.put(sensor.id, sensor);
+		}
+		logger.info("Sensor Location extracted from json");
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@ IN PROGRESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-		
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  MAIN LOOP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		List<Message> messageList = new ArrayList<Message>();// = new List<Message>();
 		SNSandSQS Queue = new SNSandSQS();
-		//ArrayList<DataEntry[]> entryLogger;;
-		while(true) {
+		EventLog eventLog = new EventLog();
+		int i = 1;
+		while (i < 200) {
 			messageList = Queue.getMessages();
-			TimeUnit.SECONDS.sleep(1);
-			if(messageList.isEmpty()){
+			if (eventLog.size() > 500) { // Reset the size of log to last 100 if it gets above 1000
+				eventLog.reset();
+			}
+			if (messageList.isEmpty()) { // If there are no new messages then continue and hope for new entry
 				continue;
+			} else { // If there are new messages - process each one of them
+				for (Message message : messageList) {
+					DataPoint newData = DataPoint
+							.getDataEntry(SensorMessageBody.fromJson(message.getBody()).toString());
+					if (eventLog.addEvent(newData)) { // If new event was added and valid
+						if (sensorLog.containsKey(newData.locationId)) { // If we have a sensor at the location,
+																			// calculate new average
+							sensorLog.get(newData.locationId).addDataPoint(newData.value);
+						} else {
+							logger.info("Location " + newData.locationId + " is unknown.");
+						}
+					}
+				}
+				i++;
+				System.out.println(i);
 			}
-			else {
-			//System.out.println(messageList.get(messageList.size() - 1));
-			//Get DataEntries and have a nice list of all of them
-			for(Message message : messageList) {
-				System.out.println(SensorMessageBody.fromJson(message.getBody()).toString());
-				DataPoint.getDataEntry(SensorMessageBody.fromJson(message.getBody()).toString());
-				// HERE NOW:
-				// WORKING WITH THE DATAPOINT, ADD THE EVENT IF INTO A HASHSET, THEN AVERAGE THE VALUES OVER 10 SEC, AND PUT BACK INTO HASHMAP OF SENSOR AND AVERAGE
-				
-				
-				
-				
-				//(DataEntry.getDataEntry("[" + SensorMessageBody.fromJson(message.getBody()).toString()+"]");)
-				
-				
-				//DataEntry[] dataEntry1 = DataEntry.getDataEntry("[" + SensorMessageBody.fromJson(message.getBody()).toString()+"]");
-
-				//System.out.println(DataEntry.getDataEntry("[" + SensorMessageBody.fromJson(message.getBody()).toString()+"]"));
-
-				//messageList.remove(message);
-				//dataEntry = DataEntry.getDataEntry("[" + SensorMessageBody.fromJson(message.getBody()).toString()+"]");
-				//EntryLogger.add
-				
-			}
-			}
-			//messageList.get(0).getBody();
-			
+		}
+		Queue.queueKill();
+		for (Sensor sensor : sensorLog.values()) {
+			System.out.println(Double.valueOf(df.format((sensor.average))));
 		}
 
-//		System.out.println(SensorMessageBody.fromJson(messages.get(0).getBody()));
-//		DataEntry[] dataEntry = DataEntry.getDataEntry("[" + SensorMessageBody.fromJson(messages.get(0).getBody()).toString()+"]");
-//		System.out.println("dd");
-// @@@@@@@@@@@@@@@@@@@@@@@@@ IN PROGRESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-		//Queue.queueKill();
 	}
 
 }
