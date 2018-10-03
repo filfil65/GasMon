@@ -48,7 +48,7 @@ public class Main {
 		int i = 1;
 		while (i < 10000) { // i < 500
 			messageList = Queue.getMessages();
-			logger.info("Messages Received: " + messageList.size());
+			//logger.info("Messages Received: " + messageList.size());
 			if (eventLog.size() > 5000) { // Reset the size of log to last 100 if it gets above 1000
 				eventLog.reset();
 			}
@@ -66,7 +66,7 @@ public class Main {
 			}
 			if (messageList.isEmpty()) { // If there are no new messages then continue and hope for new entry
 				i++;
-				System.out.println(i);
+				//System.out.println(i);
 				continue;
 			} else { // If there are new messages - process each one of them
 				for (Message message : messageList) {
@@ -82,7 +82,7 @@ public class Main {
 				}
 			}
 			i++;
-			System.out.println(i);
+			//System.out.println(i);
 //			if ((now - processTime) > 10000) { // process data every 10 sec
 //				processTime = processTime + 10000;
 //				AnalyzeData.extractData(sensorLog);

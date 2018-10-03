@@ -43,18 +43,20 @@ public class Sensor {
 	}
 
 	public void deleteOldRecord() {
-		// if record goes back in time too far then clear old values as we don't need
-		if (valOld == 0.0) { //If there was no record then do
-			valOld = record.get(0).average != null ? record.get(0).average : 0.0;
-			spreadOld = record.get(0).spread != null ? record.get(0).spread : 0.0;
-		} else {
-			valDiff = record.get(0).average != null ? valOld - record.get(0).average : 0.01;
+		// if next record not empty
+		if(record.get(0).average != null) {
+			valDiff = valOld - record.get(0).average;
 			valStatus = valDiff > 0 ? "increased" : "decreased";
 			valOld = record.get(0).average;
-			spreadDiff = record.get(0).spread != null ? spreadOld - record.get(0).spread : 0.01;
+			spreadDiff = spreadOld - record.get(0).spread;
 			spreadStatus = spreadDiff > 0 ? "increased" : "decreased";
 			spreadOld = record.get(0).spread;
+			if(noOfMinuteRecords==0) {
+				runningAvg = record.get(0).average;
+				noOfMinuteRecords++;
+			}
 			runningAvg = (runningAvg * (noOfMinuteRecords - 1) + record.get(0).average)/noOfMinuteRecords;
+			noOfMinuteRecords++;
 		}
 		DecimalFormat df = new DecimalFormat("#.##");
 		System.out.println("Spread " + spreadStatus + " by " + df.format(spreadDiff) + ". Concentration " + valStatus
