@@ -1,31 +1,13 @@
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.AmazonSNSClient;
-import com.amazonaws.services.sns.AmazonSNSClientBuilder;
-import com.amazonaws.services.sns.model.CreateTopicRequest;
-import com.amazonaws.services.sns.util.Topics;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-
-import ch.qos.logback.core.net.SyslogOutputStream;
 
 public class Main {
 	final static Logger logger = LoggerFactory.getLogger(Main.class);
@@ -35,11 +17,8 @@ public class Main {
 		DateFormat formatter = new SimpleDateFormat("dd MMM yyyy HH:mm:ss z");
 		String bucket = "eventprocessing-rfm-sept-2018-locationss3bucket-186b0uzd6cf01";
 		String file = "locations-part2.json";
-
-		// Create a common time array with empty MinuteRecords going back 6 minutes for
-		// late values
 		long startTime = System.currentTimeMillis();
-		System.out.println(startTime);
+		long processTime = startTime;
 
 		// Get Amazon S3 Sensor Data
 		AmazonS3Getter.GetSensorData(bucket, file);
@@ -59,15 +38,18 @@ public class Main {
 		}
 		logger.info("Sensor Location extracted from json");
 
+		// Starting new Threads
+		// new Main().testRun();
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  MAIN LOOP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		List<Message> messageList = new ArrayList<Message>();// = new List<Message>();
 		SNSandSQS Queue = new SNSandSQS();
 		EventLog eventLog = new EventLog();
 		int i = 1;
-		while (i < 5000) { // i < 500
+		while (i < 10000) { // i < 500
 			messageList = Queue.getMessages();
 			logger.info("Messages Received: " + messageList.size());
-			if (eventLog.size() > 1000) { // Reset the size of log to last 100 if it gets above 1000
+			if (eventLog.size() > 5000) { // Reset the size of log to last 100 if it gets above 1000
 				eventLog.reset();
 			}
 			// Check time and print results
@@ -76,7 +58,8 @@ public class Main {
 				startTime = startTime + 60000;
 				int j = 1;
 				for (Sensor sensor : sensorLog.values()) {
-					System.out.println("--------------------\n" + formatter.format(sensor.record.get(0).startTime) + " - Sensor: "+ j);
+					System.out.println("--------------------\n" + formatter.format(sensor.record.get(0).startTime)
+							+ " - Sensor: " + j);
 					sensor.deleteOldRecord();
 					j++;
 				}
@@ -98,6 +81,11 @@ public class Main {
 				i++;
 				System.out.println(i);
 			}
+
+			if ((now - processTime) > 10000) { // process data every 10 sec
+				processTime = processTime + 10000;
+				AnalyzeData.extractData(sensorLog);
+			}
 		}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END OF MAIN LOOP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,4 +93,16 @@ public class Main {
 		Queue.queueKill();
 
 	} // End of method
+
+	private void testRun() {
+		int threadCount = 2;
+		HashMap<Integer, WorkerThread> threads = new HashMap<Integer, WorkerThread>();
+		for (int i = 0; i < threadCount; i++) {
+			WorkerThread thread = new WorkerThread(i);
+			threads.put(i, thread);
+		}
+		for (Integer threadId : threads.keySet()) {
+			threads.get(threadId).start();
+		}
+	}
 } // End of class

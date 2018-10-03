@@ -26,7 +26,7 @@ public class SNSandSQS {
 		AmazonSQS sqs = AmazonSQSClientBuilder.standard().withRegion(Regions.EU_WEST_1).withCredentials(myCredentials).build();
 		logger.info("SNS and SQS builders created"); 
 
-		// String myTopicArn = "arn:aws:sns:eu-west-1:552908040772:EventProcessing-RFM-Sept-2018-snsTopicSensorDataPart1-PUR0KBORONQF";
+//		String myTopicArn = "arn:aws:sns:eu-west-1:552908040772:EventProcessing-RFM-Sept-2018-snsTopicSensorDataPart1-PUR0KBORONQF";
 		String myTopicArn = "arn:aws:sns:eu-west-1:552908040772:EventProcessing-RFM-Sept-2018-snsTopicSensorDataPart2-Z3K3NB3PRHGH";
 		String myQueueUrl = sqs.createQueue(new CreateQueueRequest("FilipG")).getQueueUrl();
 		logger.info("Topic ARN and queue URL set/created"); 
