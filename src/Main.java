@@ -32,7 +32,6 @@ public class Main {
 
 	public static void main(String[] args) throws InterruptedException {
 		logger.info("Initialise");
-		DecimalFormat df = new DecimalFormat("#.##");
 		DateFormat formatter = new SimpleDateFormat("dd MMM yyyy HH:mm:ss z");
 		String bucket = "eventprocessing-rfm-sept-2018-locationss3bucket-186b0uzd6cf01";
 		String file = "locations.json";
@@ -67,6 +66,7 @@ public class Main {
 		int i = 1;
 		while (i < 1000) { // i < 500
 			messageList = Queue.getMessages();
+			logger.info("Messages Received: " + messageList.size());
 			if (eventLog.size() > 1000) { // Reset the size of log to last 100 if it gets above 1000
 				eventLog.reset();
 			}
@@ -78,11 +78,9 @@ public class Main {
 				System.out.println(formatter.format(startTime));
 				int j = 1;
 				for (Sensor sensor : sensorLog.values()) {
-					System.out.println("--------------------");
-					System.out.println("Sensor " + j + ": Spread " + sensor.spreadStatus + " by " + sensor.spreadDiff
-							+ ". Concentration " + sensor.valStatus + " by " + sensor.valDiff + ".");
-					System.out.println(formatter.format(sensor.record.get(0).startTime) + " - Average: "
-							+ sensor.record.get(0).average + " Spread: " + sensor.record.get(0).spread);
+					System.out.println("--------------------\n" + formatter.format(sensor.record.get(0).startTime) + " - Sensor: "+ j);
+					sensor.deleteOldRecord();
+					j++;
 				}
 			}
 			if (messageList.isEmpty()) { // If there are no new messages then continue and hope for new entry
@@ -91,9 +89,6 @@ public class Main {
 				for (Message message : messageList) {
 					DataPoint newData = DataPoint
 							.getDataEntry(SensorMessageBody.fromJson(message.getBody()).toString());
-//					System.out.println(newData.timestamp);
-					// System.out.println(newData.timestamp - startTime);
-
 					if (eventLog.addEvent(newData)) { // If new event was added and valid
 						if (sensorLog.containsKey(newData.locationId)) { // If we have a sensor at that location,
 							sensorLog.get(newData.locationId).addToRecord(newData); // Add new dataPoint to record
