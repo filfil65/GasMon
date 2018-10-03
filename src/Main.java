@@ -74,8 +74,6 @@ public class Main {
 			long now = System.currentTimeMillis();
 			if ((now - startTime) > 60000) {
 				startTime = startTime + 60000;
-				System.out.println("\nAverage pollution values and value spread 5 minutes ago were:");
-				System.out.println(formatter.format(startTime));
 				int j = 1;
 				for (Sensor sensor : sensorLog.values()) {
 					System.out.println("--------------------\n" + formatter.format(sensor.record.get(0).startTime) + " - Sensor: "+ j);
