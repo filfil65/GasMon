@@ -65,6 +65,8 @@ public class Main {
 				}
 			}
 			if (messageList.isEmpty()) { // If there are no new messages then continue and hope for new entry
+				i++;
+				System.out.println(i);
 				continue;
 			} else { // If there are new messages - process each one of them
 				for (Message message : messageList) {
@@ -78,17 +80,16 @@ public class Main {
 						}
 					}
 				}
-				i++;
-				System.out.println(i);
 			}
-
-			if ((now - processTime) > 10000) { // process data every 10 sec
-				processTime = processTime + 10000;
-				AnalyzeData.extractData(sensorLog);
-			}
+			i++;
+			System.out.println(i);
+//			if ((now - processTime) > 10000) { // process data every 10 sec
+//				processTime = processTime + 10000;
+//				AnalyzeData.extractData(sensorLog);
+//			}
 		}
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END OF MAIN LOOP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END OF MAIN WHILE LOOP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		Queue.queueKill();
 

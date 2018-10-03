@@ -13,6 +13,8 @@ public class Sensor {
 	public Double y;
 	public String id;
 	public ArrayList<MinuteRecord> record;
+	public Double runningAvg;
+	public int noOfMinuteRecords = 0;
 	public Double valOld = 0.0;
 	public Double valDiff = 0.0;
 	public String valStatus = "~";
@@ -42,7 +44,7 @@ public class Sensor {
 
 	public void deleteOldRecord() {
 		// if record goes back in time too far then clear old values as we don't need
-		if (valOld == 0.0) {
+		if (valOld == 0.0) { //If there was no record then do
 			valOld = record.get(0).average != null ? record.get(0).average : 0.0;
 			spreadOld = record.get(0).spread != null ? record.get(0).spread : 0.0;
 		} else {
@@ -52,6 +54,7 @@ public class Sensor {
 			spreadDiff = record.get(0).spread != null ? spreadOld - record.get(0).spread : 0.01;
 			spreadStatus = spreadDiff > 0 ? "increased" : "decreased";
 			spreadOld = record.get(0).spread;
+			runningAvg = (runningAvg * (noOfMinuteRecords - 1) + record.get(0).average)/noOfMinuteRecords;
 		}
 		DecimalFormat df = new DecimalFormat("#.##");
 		System.out.println("Spread " + spreadStatus + " by " + df.format(spreadDiff) + ". Concentration " + valStatus
