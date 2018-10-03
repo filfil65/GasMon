@@ -11,9 +11,11 @@ public class Sensor {
 	public Double y;
 	public String id;
 	public ArrayList<MinuteRecord> record;
-//	public int DataPointNo = 0;
-//	public Double average;
-//	public Double diff;
+	public Double valDiff = 0.0;
+	public String valStatus = "~";
+	public Double spreadDiff = 0.0;
+	public String spreadStatus = "~";
+
 
 	public static Sensor[] getSensors(String filePath) {
 		Gson gson = new Gson();
@@ -34,7 +36,18 @@ public class Sensor {
 
 	public void addToRecord(DataPoint dataPoint) {
 			// if record goes back in time too far then clear old values as we don't need
-			if (record.size() > 7) {
+			if (record.size() > 6) {
+				if(valDiff == 0.0) {
+					valDiff = record.get(0).average;
+					valStatus = "~";
+					spreadDiff = record.get(0).spread;
+					spreadStatus = "~";
+				} else {
+					valDiff = record.get(1).average - record.get(0).average;
+					valStatus = valDiff>0 ? "increased": "decreased";
+					spreadDiff = record.get(1).spread - record.get(0).spread;
+					spreadStatus = spreadDiff>0 ? "increased": "decreased";
+				}
 				record.remove(record.get(0));
 			}
 			// if new data outside our record

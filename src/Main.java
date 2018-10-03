@@ -1,5 +1,8 @@
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -30,16 +33,14 @@ public class Main {
 	public static void main(String[] args) throws InterruptedException {
 		logger.info("Initialise");
 		DecimalFormat df = new DecimalFormat("#.##");
+		DateFormat formatter = new SimpleDateFormat("dd MMM yyyy HH:mm:ss z");
 		String bucket = "eventprocessing-rfm-sept-2018-locationss3bucket-186b0uzd6cf01";
 		String file = "locations.json";
 
 		// Create a common time array with empty MinuteRecords going back 6 minutes for
 		// late values
-		ArrayList<MinuteRecord> timeArray = new ArrayList<MinuteRecord>();
 		long startTime = System.currentTimeMillis();
-		for (int i = -5; i <= 0; i++) {
-			timeArray.add(new MinuteRecord(startTime + (i * 60000)));
-		}
+		System.out.println(startTime);
 
 		// Get Amazon S3 Sensor Data
 		AmazonS3Getter.GetSensorData(bucket, file);
@@ -49,6 +50,11 @@ public class Main {
 		Sensor[] sensors = Sensor.getSensors(file);
 		HashMap<String, Sensor> sensorLog = new HashMap<String, Sensor>();
 		for (Sensor sensor : sensors) {
+			// Create a new array with minuteRecords and put it into the sensor
+			ArrayList<MinuteRecord> timeArray = new ArrayList<MinuteRecord>();
+			for (int i = -5; i <= 0; i++) {
+				timeArray.add(new MinuteRecord(startTime + (i * 60000)));
+			}
 			sensor.record = timeArray;
 			sensorLog.put(sensor.id, sensor);
 		}
@@ -59,26 +65,35 @@ public class Main {
 		SNSandSQS Queue = new SNSandSQS();
 		EventLog eventLog = new EventLog();
 		int i = 1;
-		while (i < 200) {
+		while (i < 1000) { // i < 500
 			messageList = Queue.getMessages();
-			if (eventLog.size() > 500) { // Reset the size of log to last 100 if it gets above 1000
+			if (eventLog.size() > 1000) { // Reset the size of log to last 100 if it gets above 1000
 				eventLog.reset();
 			}
 			// Check time and print results
 			long now = System.currentTimeMillis();
-			if((now - startTime) > 60000) {
+			if ((now - startTime) > 60000) {
 				startTime = startTime + 60000;
 				System.out.println("\nAverage pollution values and value spread 5 minutes ago were:");
-				System.out.println(Double.valueOf(df.format((startTime))));
+				System.out.println(formatter.format(startTime));
+				int j = 1;
 				for (Sensor sensor : sensorLog.values()) {
-					System.out.println("Average: " + sensor.record.get(0).average + " Spread: " + sensor.record.get(0).spread);
+					System.out.println("--------------------");
+					System.out.println("Sensor " + j + ": Spread " + sensor.spreadStatus + " by " + sensor.spreadDiff
+							+ ". Concentration " + sensor.valStatus + " by " + sensor.valDiff + ".");
+					System.out.println(formatter.format(sensor.record.get(0).startTime) + " - Average: "
+							+ sensor.record.get(0).average + " Spread: " + sensor.record.get(0).spread);
 				}
 			}
 			if (messageList.isEmpty()) { // If there are no new messages then continue and hope for new entry
 				continue;
 			} else { // If there are new messages - process each one of them
 				for (Message message : messageList) {
-					DataPoint newData = DataPoint.getDataEntry(SensorMessageBody.fromJson(message.getBody()).toString());
+					DataPoint newData = DataPoint
+							.getDataEntry(SensorMessageBody.fromJson(message.getBody()).toString());
+//					System.out.println(newData.timestamp);
+					// System.out.println(newData.timestamp - startTime);
+
 					if (eventLog.addEvent(newData)) { // If new event was added and valid
 						if (sensorLog.containsKey(newData.locationId)) { // If we have a sensor at that location,
 							sensorLog.get(newData.locationId).addToRecord(newData); // Add new dataPoint to record
@@ -91,10 +106,10 @@ public class Main {
 				System.out.println(i);
 			}
 		}
-		
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END OF MAIN LOOP ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		Queue.queueKill();
-		
+
 	} // End of method
 } // End of class

@@ -10,7 +10,7 @@ public class MinuteRecord {
 	
 	public MinuteRecord(double startTime) {
 		this.startTime = startTime;
-		this.endTime = startTime + 6000;
+		this.endTime = startTime + 60000;
 	}
 
 	public void addData(DataPoint dataPoint) {

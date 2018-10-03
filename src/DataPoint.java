@@ -4,7 +4,7 @@ public class DataPoint {
 	String locationId;
 	String eventId;
 	Double value;
-	Double timestamp;
+	double timestamp;
 	
 	public static DataPoint getDataEntry(String jsonString){
 		Gson gson = new Gson();
