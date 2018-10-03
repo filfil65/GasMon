@@ -40,8 +40,8 @@ public class Sensor {
 	public void deleteOldRecord() {
 		// if record goes back in time too far then clear old values as we don't need
 		if(valOld == 0.0) {
-			valOld = record.get(0).average != null ? record.get(0).average : 1 ;
-			spreadOld = record.get(0).spread != null ? record.get(0).spread : 1;
+			valOld = record.get(0).average != null ? record.get(0).average : 0.0;
+			spreadOld = record.get(0).spread != null ? record.get(0).spread : 0.0;
 		} else {
 			valDiff = valOld - record.get(0).average;
 			valStatus = valDiff >0 ? "increased": "decreased";
@@ -52,7 +52,9 @@ public class Sensor {
 		}
 		DecimalFormat df = new DecimalFormat("#.##");
 		System.out.println("Spread " + spreadStatus + " by " + df.format(spreadDiff) + ". Concentration " + valStatus + " by " + df.format(valDiff) + ".");
-		System.out.println("Average Concentration: " + df.format(record.get(0).average) + ". Spread: " + df.format(record.get(0).spread));
+		Double average = record.get(0).average!=null ? record.get(0).average : 0.0;
+		Double spread = record.get(0).spread!=null ? record.get(0).spread : 0.0; 
+		System.out.println("Average Concentration: " + df.format(average) + ". Spread: " + df.format(spread));
 		record.remove(record.get(0));
 	}
 	

@@ -34,7 +34,7 @@ public class Main {
 		logger.info("Initialise");
 		DateFormat formatter = new SimpleDateFormat("dd MMM yyyy HH:mm:ss z");
 		String bucket = "eventprocessing-rfm-sept-2018-locationss3bucket-186b0uzd6cf01";
-		String file = "locations.json";
+		String file = "locations-part2.json";
 
 		// Create a common time array with empty MinuteRecords going back 6 minutes for
 		// late values
@@ -64,7 +64,7 @@ public class Main {
 		SNSandSQS Queue = new SNSandSQS();
 		EventLog eventLog = new EventLog();
 		int i = 1;
-		while (i < 1000) { // i < 500
+		while (i < 5000) { // i < 500
 			messageList = Queue.getMessages();
 			logger.info("Messages Received: " + messageList.size());
 			if (eventLog.size() > 1000) { // Reset the size of log to last 100 if it gets above 1000
