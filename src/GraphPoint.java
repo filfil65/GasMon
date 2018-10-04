@@ -5,7 +5,6 @@ public final class GraphPoint {
     private final Double col;
     private final Double val;
 
-
     public GraphPoint(Double row, Double col, Double val) {
         this.row = row;
         this.col = col;

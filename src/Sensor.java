@@ -46,24 +46,27 @@ public class Sensor {
 		// if next record not empty
 		if(record.get(0).average != null) {
 			valDiff = valOld - record.get(0).average;
-			valStatus = valDiff > 0 ? "increased" : "decreased";
+			valStatus = valOld > record.get(0).average ? "decreased":"increased" ;
 			valOld = record.get(0).average;
 			spreadDiff = spreadOld - record.get(0).spread;
-			spreadStatus = spreadDiff > 0 ? "increased" : "decreased";
+			spreadStatus = spreadDiff > 0 ? "decreased" : "increased";
 			spreadOld = record.get(0).spread;
 			if(noOfMinuteRecords==0) {
 				runningAvg = record.get(0).average;
 				noOfMinuteRecords++;
+			} else {
+				runningAvg = (runningAvg * (noOfMinuteRecords - 1) + record.get(0).average)/noOfMinuteRecords;
+				noOfMinuteRecords++;
 			}
-			runningAvg = (runningAvg * (noOfMinuteRecords - 1) + record.get(0).average)/noOfMinuteRecords;
-			noOfMinuteRecords++;
 		}
 		DecimalFormat df = new DecimalFormat("#.##");
-		System.out.println("Spread " + spreadStatus + " by " + df.format(spreadDiff) + ". Concentration " + valStatus
-				+ " by " + df.format(valDiff) + ".");
+		DecimalFormat dfSpread = new DecimalFormat("#.####");
+
+		System.out.println("Concentration " + valStatus + " by " + df.format(valDiff) + ". Spread " + spreadStatus
+				+ " by " + df.format(spreadDiff) + ".");
 		Double average = record.get(0).average != null ? record.get(0).average : 0.0;
 		Double spread = record.get(0).spread != null ? record.get(0).spread : 0.0;
-		System.out.println("Average Concentration: " + df.format(average) + ". Spread: " + df.format(spread));
+		System.out.println("Average Concentration: " + df.format(average) + ". Spread: " + dfSpread.format(spread));
 		record.remove(record.get(0));
 	}
 
@@ -71,7 +74,6 @@ public class Sensor {
 		// if new data outside our record
 		while (dataPoint.timestamp > record.get(record.size() - 1).endTime) {
 			record.add(new MinuteRecord(record.get(record.size() - 1).endTime));
-			;
 		}
 		// if record for the minute is available then add
 		for (MinuteRecord record : record) {

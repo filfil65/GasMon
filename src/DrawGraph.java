@@ -49,10 +49,20 @@ import org.jzy3d.plot3d.rendering.canvas.Quality;
 //}
 
 public class DrawGraph extends AbstractAnalysis{
-	public static void main(String[] args) throws Exception {
-		AnalysisLauncher.open(new DrawGraph());
-	}
+//	public static void main(String[] args) throws Exception {
+//		AnalysisLauncher.open(new DrawGraph());
+//	}
+	Coord3d[] points;
 		
+//	public DrawGraph(Coord3d[] leakMap) {
+//	}
+	
+	
+	public DrawGraph(Coord3d[] leakMap) {
+		this.points = leakMap;
+	}
+
+
 	@Override
     public void init(){
         int size = 1000000;
@@ -61,23 +71,23 @@ public class DrawGraph extends AbstractAnalysis{
         float z;
         float a;
         
-        Coord3d[] points = new Coord3d[size];
+//        Coord3d[] points = new Coord3d[size];
         Color[]   colors = new Color[size];
 //      points[i] = new Coord3d(x, y, z);
-        points[0] = new Coord3d(1f, 1f, 1f);
-        points[1] = new Coord3d(1000f, 1000f, 20f);
-        colors[0] = new Color(0.001f, 0.001f, 0.001f, 0.25f);
-        colors[1] = new Color(1f, 1f, 1f, 0.5f);
+//        points[0] = new Coord3d(1f, 1f, 1f);
+//        points[1] = new Coord3d(1000f, 1000f, 20f);
+//        colors[0] = new Color(0.001f, 0.001f, 0.001f, 0.25f);
+//        colors[1] = new Color(1f, 1f, 1f, 0.5f);
 
         
         Random r = new Random();
         r.setSeed(0);
         
-        for(int i=2; i<size; i++){
+        for(int i=0; i<size; i++){
             x = r.nextFloat() - 0.5f;
             y = r.nextFloat() - 0.5f;
             z = 0.01f;
-            points[i] = new Coord3d(x*1000, y*1000, z*1000);
+//            points[i] = new Coord3d(x*1000, y*1000, z*1000);
             a = 0.25f;
             colors[i] = new Color(0.1f, 0.2f, 0.3f, 0.05f);
         }

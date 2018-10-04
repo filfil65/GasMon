@@ -2,7 +2,7 @@
 public class MinuteRecord {
 	public Double startTime;
 	public Double endTime;
-	public int DataPointNo = 0;
+	public int DataPointNo;
 	public Double average;
 	public Double min;
 	public Double max;
@@ -11,6 +11,7 @@ public class MinuteRecord {
 	public MinuteRecord(double startTime) {
 		this.startTime = startTime;
 		this.endTime = startTime + 60000;
+		this.DataPointNo = 0;
 	}
 
 	public void addData(DataPoint dataPoint) {
@@ -20,7 +21,7 @@ public class MinuteRecord {
 			min = dataPoint.value;
 			max = dataPoint.value;
 			spread = (double) 0;
-		} else { // Add Record
+		} else if (dataPoint.value!=null) { // Add Record
 			DataPointNo++;
 			max = max < dataPoint.value ? dataPoint.value : max;
 			min = min > dataPoint.value ? dataPoint.value : min;

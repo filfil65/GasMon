@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import com.amazonaws.services.sns.util.Topics;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
+import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 
@@ -28,7 +30,7 @@ public class SNSandSQS {
 
 //		String myTopicArn = "arn:aws:sns:eu-west-1:552908040772:EventProcessing-RFM-Sept-2018-snsTopicSensorDataPart1-PUR0KBORONQF";
 		String myTopicArn = "arn:aws:sns:eu-west-1:552908040772:EventProcessing-RFM-Sept-2018-snsTopicSensorDataPart2-Z3K3NB3PRHGH";
-		String myQueueUrl = sqs.createQueue(new CreateQueueRequest("FilipG")).getQueueUrl();
+		String myQueueUrl = sqs.createQueue(new CreateQueueRequest("Filip1")).getQueueUrl();
 		logger.info("Topic ARN and queue URL set/created"); 
 
 		Topics.subscribeQueue(sns, sqs, myTopicArn, myQueueUrl);
@@ -40,7 +42,19 @@ public class SNSandSQS {
 	}
 	
 	public List<Message> getMessages() throws InterruptedException{
-		List<Message> messages = sqs.receiveMessage(new ReceiveMessageRequest(myQueueUrl).withMaxNumberOfMessages(10)).getMessages();
+		final ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(myQueueUrl).withMaxNumberOfMessages(10);
+		List<Message> messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
+		
+//		final String messageReceiptHandle = messages.get().getReceiptHandle();
+//		sqs.deleteMessage(new DeleteMessageRequest(myQueueUrl, messageReceiptHandle));
+		ArrayList<DeleteMessageBatchRequestEntry> messagesToDelete = new ArrayList<>();
+		for (int i = 0; i < messages.size(); i++) {
+			messagesToDelete.add(new DeleteMessageBatchRequestEntry(String.valueOf(i), messages.get(i).getReceiptHandle()));
+		}
+		if (!messagesToDelete.isEmpty()) sqs.deleteMessageBatch(myQueueUrl, messagesToDelete);
+//		for (Message m : messages) {
+//		    sqs.deleteMessage(myQueueUrl, m.getReceiptHandle());
+//		}
 		return messages;
 	}
 	public void queueKill(){
